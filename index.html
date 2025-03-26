@@ -99,6 +99,12 @@
         <div id="searchContainer">
             <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..." onkeyup="filterCards()">
             <input type="text" id="effectSearch" class="searchBar" placeholder="Search by effect..." onkeyup="filterCards()">
+            
+            <!-- Sort dropdown -->
+            <select id="sortOrder" onchange="sortCards()">
+                <option value="asc">Sort: A-Z</option>
+                <option value="desc">Sort: Z-A</option>
+            </select>
         </div>
         <div id="cardContainer"></div>
     </div>
