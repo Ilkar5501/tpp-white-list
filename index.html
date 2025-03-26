@@ -117,7 +117,7 @@
         }
 
         function normalizeSearchTerm(term) {
-            return term.replace(/[?/'!,:&.]/g, "_").toLowerCase();
+            return term.replace(/[?/'!,:&."]/g, "_").toLowerCase();
         }
 
         function displayCards(cards) {
