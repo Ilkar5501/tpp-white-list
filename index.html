@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yu-Gi-Oh! Card List</title>
+    <style>
+        body {
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: row;
+        }
+
+        #mainContent {
+            flex-grow: 1;
+            transition: margin-right 0.3s ease-in-out;
+        }
+
+        #searchContainer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .searchBar {
+            width: 40%;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #cardContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .card {
+            width: 150px;
+            height: auto;
+            cursor: pointer;
+        }
+
+        #cardinfo {
+            display: none;
+            background-color: #333;
+            padding: 15px;
+            width: 25%;
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: -5px 0 5px rgba(0,0,0,0.5);
+            text-align: left;
+        }
+
+            #cardinfo h2 {
+                font-size: 20px;
+                text-align: center;
+            }
+
+            #cardinfo p {
+                font-size: 14px;
+                margin: 5px 0;
+            }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="mainContent">
+        <h1>Yu-Gi-Oh! Card List</h1>
+        <div id="searchContainer">
+            <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..." onkeyup="filterCards()">
+            <input type="text" id="effectSearch" class="searchBar" placeholder="Search by effect..." onkeyup="filterCards()">
+        </div>
+        <div id="cardContainer"></div>
+    </div>
+
+    <div id="cardinfo">
+        <button class="close-btn" onclick="closeCardInfo()">X</button>
+        <img id="infoImage" src="" class="card" style="display: block; margin: auto; max-width: 100%;">
+        <h2 id="infoName"></h2>
+        <p><strong>Card Type:</strong> <span id="infoType"></span></p>
+        <p id="infoAttributeWrapper"><strong>Attribute:</strong> <span id="infoAttribute"></span></p>
+        <p id="infoLevelWrapper"><strong>Level:</strong> <span id="infoLevel"></span></p>
+        <p><strong>Monster Type / Sub-Type:</strong> <span id="infoRace"></span></p>
+        <p><strong>Effect:</strong> <span id="infoDesc"></span></p>
+    </div>
+
+    <script>
+        let cardData = [];
+
+        async function loadCardData() {
+            try {
+                const response = await fetch('card_data.json');
+                cardData = await response.json();
+                displayCards(cardData);
+            } catch (error) {
+                console.error("Error loading card data:", error);
+            }
+        }
+
+        function normalizeSearchTerm(term) {
+            return term.replace(/[?/'!,:&.]/g, "_").toLowerCase();
+        }
+
+        function displayCards(cards) {
+            const container = document.getElementById("cardContainer");
+            container.innerHTML = "";
+            cards.sort((a, b) => a.name.localeCompare(b.name));
+
+            cards.forEach(card => {
+                const formattedName = card.name.replace(/[?/'!,:&.]/g, "_").replace(/\s+/g, " ");
+                const img = document.createElement("img");
+                img.src = `card_images/${formattedName}.jpg`;
+                img.classList.add("card");
+                img.onclick = () => showCardInfo(card, img.src);
+                container.appendChild(img);
+            });
+        }
+
+        function showCardInfo(card, imgSrc) {
+            document.getElementById("infoImage").src = imgSrc;
+            document.getElementById("infoName").innerText = card.name;
+            document.getElementById("infoType").innerText = card.type;
+            document.getElementById("infoAttribute").innerText = card.attribute;
+            document.getElementById("infoLevel").innerText = card.level;
+            document.getElementById("infoRace").innerText = card.race;
+            document.getElementById("infoDesc").innerText = card.desc;
+
+            document.getElementById("infoAttributeWrapper").style.display = card.attribute ? "block" : "none";
+            document.getElementById("infoLevelWrapper").style.display = card.level ? "block" : "none";
+
+            document.getElementById("cardinfo").style.display = "block";
+            document.getElementById("mainContent").style.marginRight = "25%";
+        }
+
+        function closeCardInfo() {
+            document.getElementById("cardinfo").style.display = "none";
+            document.getElementById("mainContent").style.marginRight = "0";
+        }
+
+        function filterCards() {
+            const nameSearchText = normalizeSearchTerm(document.getElementById("nameSearch").value);
+            const effectSearchText = document.getElementById("effectSearch").value.toLowerCase();
+
+            const filteredCards = cardData.filter(card => {
+                const normalizedCardName = normalizeSearchTerm(card.name);
+                const nameMatch = nameSearchText.split("*").every(term => normalizedCardName.includes(term.trim()));
+                const effectMatch = effectSearchText.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
+                return nameMatch && effectMatch;
+            });
+
+            displayCards(filteredCards);
+        }
+
+        window.onload = loadCardData;
+    </script>
+</body>
+</html>
