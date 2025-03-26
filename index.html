@@ -7,20 +7,20 @@
     <style>
         body {
            background-image: url('background.jpg');
-           background-size: 100% 100%;
+           background-size: cover;
            background-position: center;
            background-repeat: no-repeat;
            background-attachment: fixed;
            background-color: #222;
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            display: flex;
-            flex-direction: row;
+           color: white;
+           font-family: Arial, sans-serif;
+           text-align: center;
+           display: flex;
+           flex-direction: row;
         }
         
         h1 {
-        color: white;
+            color: white;
         }
         
         #mainContent {
@@ -140,7 +140,6 @@
         function displayCards(cards) {
             const container = document.getElementById("cardContainer");
             container.innerHTML = "";
-            cards.sort((a, b) => a.name.localeCompare(b.name));
 
             cards.forEach(card => {
                 const formattedName = card.name.replace(/[?/'!,:&."]/g, "_").replace(/\s+/g, " ");
@@ -153,15 +152,27 @@
         }
 
         function sortCards() {
-            const sortOrder = document.getElementById("sortOrder").value;
+            filterCards(); // Calls filterCards() so sorting applies dynamically
+        }
 
-            cardData.sort((a, b) => {
-            return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+        function filterCards() {
+            const nameSearchText = normalizeSearchTerm(document.getElementById("nameSearch").value);
+            const effectSearchText = document.getElementById("effectSearch").value.toLowerCase();
+
+            const filteredCards = cardData.filter(card => {
+                const normalizedCardName = normalizeSearchTerm(card.name);
+                const nameMatch = nameSearchText.split("*").every(term => normalizedCardName.includes(term.trim()));
+                const effectMatch = effectSearchText.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
+                return nameMatch && effectMatch;
             });
 
-            displayCards(cardData);
+            // Apply sorting after filtering
+            const sortOrder = document.getElementById("sortOrder").value;
+            filteredCards.sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+
+            displayCards(filteredCards);
         }
-        
+
         function showCardInfo(card, imgSrc) {
             document.getElementById("infoImage").src = imgSrc;
             document.getElementById("infoName").innerText = card.name;
@@ -181,23 +192,6 @@
         function closeCardInfo() {
             document.getElementById("cardinfo").style.display = "none";
             document.getElementById("mainContent").style.marginRight = "0";
-        }
-
-        function filterCards() {
-            const nameSearchText = normalizeSearchTerm(document.getElementById("nameSearch").value);
-            const effectSearchText = document.getElementById("effectSearch").value.toLowerCase();
-
-            const filteredCards = cardData.filter(card => {
-                const normalizedCardName = normalizeSearchTerm(card.name);
-                const nameMatch = nameSearchText.split("*").every(term => normalizedCardName.includes(term.trim()));
-                const effectMatch = effectSearchText.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
-                return nameMatch && effectMatch;
-            });
-
-             const sortOrder = document.getElementById("sortOrder").value;
-             filteredCards.sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
-
-            displayCards(filteredCards);
         }
 
         window.onload = loadCardData;
