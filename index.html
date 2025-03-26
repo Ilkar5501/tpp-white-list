@@ -152,6 +152,16 @@
             });
         }
 
+        function sortCards() {
+            const sortOrder = document.getElementById("sortOrder").value;
+
+            cardData.sort((a, b) => {
+            return sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+            });
+
+            displayCards(cardData);
+        }
+        
         function showCardInfo(card, imgSrc) {
             document.getElementById("infoImage").src = imgSrc;
             document.getElementById("infoName").innerText = card.name;
@@ -183,6 +193,9 @@
                 const effectMatch = effectSearchText.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
                 return nameMatch && effectMatch;
             });
+
+             const sortOrder = document.getElementById("sortOrder").value;
+             filteredCards.sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
 
             displayCards(filteredCards);
         }
