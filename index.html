@@ -126,7 +126,7 @@
             cards.sort((a, b) => a.name.localeCompare(b.name));
 
             cards.forEach(card => {
-                const formattedName = card.name.replace(/[?/'!,:&.]/g, "_").replace(/\s+/g, " ");
+                const formattedName = card.name.replace(/[?/'!,:&."]/g, "_").replace(/\s+/g, " ");
                 const img = document.createElement("img");
                 img.src = `card_images/${formattedName}.jpg`;
                 img.classList.add("card");
