@@ -154,7 +154,7 @@
             cards.forEach(card => {
                 const formattedName = card.name.replace(/[?/'!,:&."]/g, "_").replace(/\s+/g, " ");
                 const img = document.createElement("img");
-                img.src = `card_images/${formattedName}.jpg`;
+                img.src = `card_images/small/${formattedName}.jpg`;
                 img.classList.add("card");
                 img.onclick = () => showCardInfo(card, img.src);
                 container.appendChild(img);
