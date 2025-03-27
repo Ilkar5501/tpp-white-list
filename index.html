@@ -9,6 +9,10 @@
     <link rel="shortcut icon" href="/tpp-white-list/icon/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/tpp-white-list/icon/apple-touch-icon.png" />
     <link rel="manifest" href="/tpp-white-list/icon/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+
     <title>TPP TCG Cards</title>
     <style>
         body {
@@ -18,10 +22,31 @@
             text-align: center;
             display: flex;
             flex-direction: row;
+            padding: 0;
+            margin: 0;
         }
 
         h1 {
             color: white;
+        }
+
+        .headerBar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .headerBar h1 {
+            font-family: "Pirata One", system-ui;
+            font-weight: 400;
+            font-style: normal;
+            color: white;
+            font-size: 100px;
+            text-shadow: 0px 0px 18px black, 0px 0px 18px black, 0px 0px 18px black;
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            padding: 0;
+            margin: 0;
         }
 
         #mainContent {
@@ -82,8 +107,8 @@
         }
 
         #bannerImage {
-            width: calc(100% - 10px);
-            max-height: 400px;
+            width: 100vw;
+            max-height: 450px;
             min-height: 200px;
             object-fit: cover;
             object-position: top;
@@ -105,8 +130,10 @@
 
 <body>
     <div id="mainContent">
-        <img id="bannerImage" src="Banner.png" />
-        <h1>TPP TCG Cards</h1>
+        <div class="headerBar">
+            <img id="bannerImage" src="Banner.png" />
+            <h1>The Plunder Pirates</h1>
+        </div>
         <div id="searchContainer">
             <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..."
                 onkeyup="filterCards()">
