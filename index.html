@@ -151,12 +151,15 @@
             const container = document.getElementById("cardContainer");
             container.innerHTML = "";
 
-            cards.forEach(card => {
+            cards.forEach((card, ix) => {
                 const formattedName = card.name.replace(/[?/'!,:&."]/g, "_").replace(/\s+/g, " ");
                 const img = document.createElement("img");
                 img.src = `card_images/small/${formattedName}.jpg`;
                 img.classList.add("card");
                 img.onclick = () => showCardInfo(card, `card_images/${formattedName}.jpg`);
+                if (ix > 50) {
+                    img.loading = "lazy";
+                }
                 container.appendChild(img);
             });
         }
@@ -204,7 +207,7 @@
             document.getElementById("mainContent").style.marginRight = "0";
         }
 
-        window.onload = loadCardData;
+        loadCardData();
     </script>
 </body>
 
