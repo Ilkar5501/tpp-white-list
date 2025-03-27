@@ -156,7 +156,7 @@
                 const img = document.createElement("img");
                 img.src = `card_images/small/${formattedName}.jpg`;
                 img.classList.add("card");
-                img.onclick = () => showCardInfo(card, img.src);
+                img.onclick = () => showCardInfo(card, `card_images/${formattedName}.jpg`);
                 container.appendChild(img);
             });
         }
