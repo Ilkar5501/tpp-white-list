@@ -16,8 +16,6 @@
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
-            display: flex;
-            flex-direction: row;
         }
 
         h1 {
@@ -25,8 +23,9 @@
         }
 
         #mainContent {
-            flex-grow: 1;
             transition: margin-right 0.3s ease-in-out;
+            display: grid;
+            justify-content: center;
         }
 
         #searchContainer {
@@ -43,10 +42,11 @@
         }
 
         #cardContainer {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
             gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 150px);
+            justify-content: center;
+            position: relative;
         }
 
         .card {
@@ -69,13 +69,15 @@
             text-align: left;
         }
 
-        #cardinfo h2 {
+        #cardinfo h2,
+        .details h2 {
             font-size: 20px;
             color: white;
             text-align: center;
         }
 
-        #cardinfo p {
+        #cardinfo p,
+        .details p {
             font-size: 14px;
             color: white;
             margin: 5px 0;
@@ -96,6 +98,42 @@
             padding: 5px 10px;
             cursor: pointer;
             font-size: 16px;
+        }
+
+        .card .details {
+            text-align: left;
+            max-height: 0;
+            transition: max-height 0.25s ease-in-out,
+                padding 0.25s ease-in-out,
+                margin-block 0.25s ease-in-out;
+            overflow: scroll;
+            position: absolute;
+
+            left: 70px;
+            width: calc(100vw - 160px);
+            margin-block: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0;
+        }
+
+        .card .padder {
+            height: 0;
+            transition: height 0.25s ease-in-out;
+        }
+
+        .card.current .details {
+            max-height: 200px;
+            padding: 10px;
+            margin-block: 10px;
+        }
+
+        .card.current .padder {
+            height: 240px;
+        }
+
+        .card.current img {
+            border: 5px solid #eac30b;
+            margin: -5px;
         }
     </style>
 </head>
@@ -119,16 +157,20 @@
         <div id="cardContainer"></div>
     </div>
 
-    <div id="cardinfo">
-        <button class="close-btn" onclick="closeCardInfo()">X</button>
-        <img id="infoImage" src="" class="card" style="display: block; margin: auto; max-width: 100%;">
-        <h2 id="infoName"></h2>
-        <p><strong>Card Type:</strong> <span id="infoType"></span></p>
-        <p id="infoAttributeWrapper"><strong>Attribute:</strong> <span id="infoAttribute"></span></p>
-        <p id="infoLevelWrapper"><strong>Level:</strong> <span id="infoLevel"></span></p>
-        <p><strong>Monster Type / Sub-Type:</strong> <span id="infoRace"></span></p>
-        <p><strong>Effect:</strong> <span id="infoDesc"></span></p>
-    </div>
+    <template id="singleCard">
+        <div class="card">
+            <img />
+            <div class="details">
+                <h2 class="infoName"></h2>
+                <p><strong>Card Type:</strong> <span class="infoType"></span></p>
+                <p class="infoAttributeWrapper"><strong>Attribute:</strong> <span class="infoAttribute"></span></p>
+                <p class="infoLevelWrapper"><strong>Level:</strong> <span class="infoLevel"></span></p>
+                <p><strong>Monster Type / Sub-Type:</strong> <span class="infoRace"></span></p>
+                <p><strong>Effect:</strong> <span class="infoDesc"></span></p>
+            </div>
+            <div class="padder" ontransitionend="cardAnimationEnd()"></div>
+        </div>
+    </template>
 
     <script>
         let cardData = [];
@@ -151,13 +193,27 @@
             const container = document.getElementById("cardContainer");
             container.innerHTML = "";
 
+            const template = document.querySelector("#singleCard");
+
             cards.forEach(card => {
                 const formattedName = card.name.replace(/[?/'!,:&."]/g, "_").replace(/\s+/g, " ");
-                const img = document.createElement("img");
+                const cardDom = template.content.cloneNode(true);
+                let img = cardDom.querySelector("img");
                 img.src = `card_images/${formattedName}.jpg`;
                 img.classList.add("card");
-                img.onclick = () => showCardInfo(card, img.src);
-                container.appendChild(img);
+                img.onclick = showCardInfo;
+
+                cardDom.querySelector(".infoName").innerText = card.name;
+                cardDom.querySelector(".infoType").innerText = card.type;
+                cardDom.querySelector(".infoAttribute").innerText = card.attribute;
+                cardDom.querySelector(".infoLevel").innerText = card.level;
+                cardDom.querySelector(".infoRace").innerText = card.race;
+                cardDom.querySelector(".infoDesc").innerText = card.desc;
+
+                cardDom.querySelector(".infoAttributeWrapper").style.display = card.attribute ? "block" : "none";
+                cardDom.querySelector(".infoLevelWrapper").style.display = card.level ? "block" : "none";
+
+                container.appendChild(cardDom);
             });
         }
 
@@ -183,25 +239,35 @@
             displayCards(filteredCards);
         }
 
-        function showCardInfo(card, imgSrc) {
-            document.getElementById("infoImage").src = imgSrc;
-            document.getElementById("infoName").innerText = card.name;
-            document.getElementById("infoType").innerText = card.type;
-            document.getElementById("infoAttribute").innerText = card.attribute;
-            document.getElementById("infoLevel").innerText = card.level;
-            document.getElementById("infoRace").innerText = card.race;
-            document.getElementById("infoDesc").innerText = card.desc;
+        let currentCard = null;
+        let queuedChange = null;
+        function showCardInfo(event) {
+            let animated = {};
+            if (currentCard) {
+                currentCard.classList.remove("current");
+                let animated = currentCard.querySelector(".padder");
+            }
 
-            document.getElementById("infoAttributeWrapper").style.display = card.attribute ? "block" : "none";
-            document.getElementById("infoLevelWrapper").style.display = card.level ? "block" : "none";
-
-            document.getElementById("cardinfo").style.display = "block";
-            document.getElementById("mainContent").style.marginRight = "25%";
+            if (event.currentTarget.parentElement === currentCard) {
+                currentCard = null;
+            } else {
+                let next = event.currentTarget.parentElement;
+                queuedChange = () => {
+                    next.classList.add("current");
+                    currentCard = next;
+                };
+                setTimeout(() => { cardAnimationEnd(); }, 250);
+                if (!currentCard) {
+                    cardAnimationEnd();
+                }
+            }
         }
 
-        function closeCardInfo() {
-            document.getElementById("cardinfo").style.display = "none";
-            document.getElementById("mainContent").style.marginRight = "0";
+        function cardAnimationEnd() {
+            if (queuedChange) {
+                queuedChange();
+                queuedChange = null;
+            }
         }
 
         window.onload = loadCardData;
