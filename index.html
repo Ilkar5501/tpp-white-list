@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TPP TCG Cards</title>
     <style>
         body {
-           background-color: #222;
-           color: white;
-           font-family: Arial, sans-serif;
-           text-align: center;
-           display: flex;
-           flex-direction: row;
+            background-color: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: row;
         }
-        
+
         h1 {
             color: white;
         }
-        
+
         #mainContent {
             flex-grow: 1;
             transition: margin-right 0.3s ease-in-out;
@@ -59,21 +60,26 @@
             top: 0;
             height: 100vh;
             overflow-y: auto;
-            box-shadow: -5px 0 5px rgba(0,0,0,0.5);
+            box-shadow: -5px 0 5px rgba(0, 0, 0, 0.5);
             text-align: left;
         }
 
-            #cardinfo h2 {
-                font-size: 20px;
-                color: white;
-                text-align: center;
-            }
+        #cardinfo h2 {
+            font-size: 20px;
+            color: white;
+            text-align: center;
+        }
 
-            #cardinfo p {
-                font-size: 14px;
-                color: white;
-                margin: 5px 0;
-            }
+        #cardinfo p {
+            font-size: 14px;
+            color: white;
+            margin: 5px 0;
+        }
+
+        #bannerImage {
+            width: calc(100% - 10px);
+            max-width: 1300px;
+        }
 
         .close-btn {
             position: absolute;
@@ -88,14 +94,17 @@
         }
     </style>
 </head>
+
 <body>
     <div id="mainContent">
-        <img src="Banner.jpg" />
+        <img id="bannerImage" src="Banner.png" />
         <h1>TPP TCG Cards</h1>
         <div id="searchContainer">
-            <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..." onkeyup="filterCards()">
-            <input type="text" id="effectSearch" class="searchBar" placeholder="Search by effect..." onkeyup="filterCards()">
-            
+            <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..."
+                onkeyup="filterCards()">
+            <input type="text" id="effectSearch" class="searchBar" placeholder="Search by effect..."
+                onkeyup="filterCards()">
+
             <!-- Sort dropdown -->
             <select id="sortOrder" onchange="sortCards()">
                 <option value="asc">Sort: A-Z</option>
@@ -193,4 +202,5 @@
         window.onload = loadCardData;
     </script>
 </body>
+
 </html>
