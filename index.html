@@ -140,12 +140,17 @@
                 onkeyup="filterCards()">
 
             <!-- Sort dropdown -->
-            <select id="sortOrder" onchange="sortCards()">
+            <!-- <select id="sortOrder" onchange="sortCards()">
                 <option value="asc">Sort: A-Z</option>
                 <option value="desc">Sort: Z-A</option>
-            </select>
+            </select> -->
+            <select name="type" class="filter" onChange="filterCards()"></select>
+            <select name="attribute" class="filter" onChange="filterCards()"></select>
+            <select name="level" class="filter" onChange="filterCards()"></select>
+            <select name="monsterType" class="filter" onChange="filterCards()"></select>
         </div>
-        <div id="cardContainer"></div>
+        <div id="cardContainer">
+        </div>
     </div>
 
     <div id="cardinfo">
@@ -177,6 +182,7 @@
         }
 
         function displayCards(cards) {
+            updateFilterOptions(cards);
             const container = document.getElementById("cardContainer");
             container.innerHTML = "";
 
@@ -193,6 +199,70 @@
             });
         }
 
+        function updateFilterOptions(cards) {
+            let types = new Set();
+            let attributes = new Set();
+            let levels = new Set();
+            let monsterTypes = new Set();
+            cards.forEach(card => {
+                types.add(card.type);
+                attributes.add(card.attribute);
+                levels.add(card.level);
+                monsterTypes.add(card.race);
+            });
+
+            let allTypes = new Set();
+            let allAttributes = new Set();
+            let allLevels = new Set();
+            let allMonsterTypes = new Set();
+            cardData.forEach(card => {
+                allTypes.add(card.type);
+                allAttributes.add(card.attribute);
+                allLevels.add(card.level);
+                allMonsterTypes.add(card.race);
+            });
+
+            populateFilterDropdown("Type", types, allTypes, document.querySelector(".filter[name=type]"));
+            populateFilterDropdown("Attribute", attributes, allAttributes, document.querySelector(".filter[name=attribute]"));
+            populateFilterDropdown("Level", levels, allLevels, document.querySelector(".filter[name=level]"), true);
+            populateFilterDropdown("Monster Type", monsterTypes, allMonsterTypes, document.querySelector(".filter[name=monsterType]"));
+        }
+
+        function populateFilterDropdown(category, types, allTypes, node, numeric) {
+            console.log(types, allTypes);
+            const value = node.value;
+            while (node.options.length > 0) {
+                node.remove(0);
+            }
+            const option = document.createElement("option");
+            option.value = "-";
+            option.innerText = `- ${category} -`;
+            node.appendChild(option);
+            let typesList = [...allTypes];
+            if (!value || value == "-") {
+                typesList = [...types];
+            }
+            if (numeric) {
+                typesList.sort((a, b) => a - b);
+            } else {
+                typesList.sort();
+            }
+            typesList.forEach(type => {
+                if (!type) {
+                    return;
+                }
+                const option = document.createElement("option");
+                option.value = type;
+                option.innerText = type;
+                node.appendChild(option);
+            })
+            if (value) {
+                node.value = value;
+            } else {
+                node.value = "-";
+            }
+        }
+
         function sortCards() {
             filterCards(); // Calls filterCards() so sorting applies dynamically
         }
@@ -201,16 +271,25 @@
             const nameSearchText = normalizeSearchTerm(document.getElementById("nameSearch").value);
             const effectSearchText = document.getElementById("effectSearch").value.toLowerCase();
 
+            const currentType = document.querySelector(".filter[name=type]");
+            const currentAttribute = document.querySelector(".filter[name=attribute]");
+            const currentLevel = document.querySelector(".filter[name=level]");
+            const currentMonsterType = document.querySelector(".filter[name=monsterType]");
+
             const filteredCards = cardData.filter(card => {
                 const normalizedCardName = normalizeSearchTerm(card.name);
                 const nameMatch = nameSearchText.split("*").every(term => normalizedCardName.includes(term.trim()));
                 const effectMatch = effectSearchText.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
-                return nameMatch && effectMatch;
+                const typeMatches = currentType.value !== "-" ? currentType.value == card.type : true;
+                const attributeMatches = currentAttribute.value !== "-" ? currentAttribute.value == card.attribute : true;
+                const levelMatches = currentLevel.value !== "-" ? currentLevel.value == card.level : true;
+                const raceMatches = currentMonsterType.value !== "-" ? currentMonsterType.value == card.race : true;
+                return nameMatch && effectMatch && typeMatches && attributeMatches && levelMatches && raceMatches;
             });
 
             // Apply sorting after filtering
-            const sortOrder = document.getElementById("sortOrder").value;
-            filteredCards.sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+            // const sortOrder = document.getElementById("sortOrder").value;
+            // filteredCards.sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
 
             displayCards(filteredCards);
         }
