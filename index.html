@@ -20,8 +20,6 @@
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
-            display: flex;
-            flex-direction: row;
             padding: 0;
             margin: 0;
         }
@@ -81,8 +79,7 @@
         }
 
         #cardinfo {
-            display: none;
-            background-color: rgba(51, 51, 51, 0.8);
+            background-color: rgba(51, 51, 51, 1);
             padding: 15px;
             width: 25%;
             position: fixed;
@@ -92,6 +89,8 @@
             overflow-y: auto;
             box-shadow: -5px 0 5px rgba(0, 0, 0, 0.5);
             text-align: left;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(105%);
         }
 
         #cardinfo h2 {
@@ -129,11 +128,11 @@
 </head>
 
 <body>
+    <div class="headerBar">
+        <img id="bannerImage" src="Banner.png" />
+        <h1>The Plunder Pirates</h1>
+    </div>
     <div id="mainContent">
-        <div class="headerBar">
-            <img id="bannerImage" src="Banner.png" />
-            <h1>The Plunder Pirates</h1>
-        </div>
         <div id="searchContainer">
             <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..."
                 onkeyup="filterCards()">
@@ -228,12 +227,12 @@
             document.getElementById("infoAttributeWrapper").style.display = card.attribute ? "block" : "none";
             document.getElementById("infoLevelWrapper").style.display = card.level ? "block" : "none";
 
-            document.getElementById("cardinfo").style.display = "block";
-            document.getElementById("mainContent").style.marginRight = "25%";
+            document.getElementById("cardinfo").style.transform = "translateX(0)";
+            document.getElementById("mainContent").style.marginRight = "calc(25% + 30px)";
         }
 
         function closeCardInfo() {
-            document.getElementById("cardinfo").style.display = "none";
+            document.getElementById("cardinfo").style.transform = null;
             document.getElementById("mainContent").style.marginRight = "0";
         }
 
