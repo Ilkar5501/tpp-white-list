@@ -47,17 +47,31 @@
             margin: 0;
         }
 
+        @media screen and (max-width: 800px) {
+            .headerBar h1 {
+                font-size: 1vw;
+            }
+        }
+
         #mainContent {
             flex-grow: 1;
             transition: margin-right 0.3s ease-in-out;
         }
 
-        #searchContainer {
+        #searchContainer,
+        #filterContainer {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
             gap: 10px;
             margin-bottom: 20px;
+            max-width: 100vw;
         }
+
+        #filterContainer select {
+            height: 35px;
+        }
+
 
         .searchBar {
             width: 40%;
@@ -138,12 +152,8 @@
                 onkeyup="filterCards()">
             <input type="text" id="effectSearch" class="searchBar" placeholder="Search by effect..."
                 onkeyup="filterCards()">
-
-            <!-- Sort dropdown -->
-            <!-- <select id="sortOrder" onchange="sortCards()">
-                <option value="asc">Sort: A-Z</option>
-                <option value="desc">Sort: Z-A</option>
-            </select> -->
+        </div>
+        <div id="filterContainer">
             <select name="type" class="filter" onChange="filterCards()"></select>
             <select name="attribute" class="filter" onChange="filterCards()"></select>
             <select name="level" class="filter" onChange="filterCards()"></select>
@@ -199,37 +209,22 @@
             });
         }
 
-        function updateFilterOptions(cards) {
-            let types = new Set();
-            let attributes = new Set();
-            let levels = new Set();
-            let monsterTypes = new Set();
-            cards.forEach(card => {
-                types.add(card.type);
-                attributes.add(card.attribute);
-                levels.add(card.level);
-                monsterTypes.add(card.race);
-            });
-
-            let allTypes = new Set();
-            let allAttributes = new Set();
-            let allLevels = new Set();
-            let allMonsterTypes = new Set();
-            cardData.forEach(card => {
-                allTypes.add(card.type);
-                allAttributes.add(card.attribute);
-                allLevels.add(card.level);
-                allMonsterTypes.add(card.race);
-            });
-
-            populateFilterDropdown("Type", types, allTypes, document.querySelector(".filter[name=type]"));
-            populateFilterDropdown("Attribute", attributes, allAttributes, document.querySelector(".filter[name=attribute]"));
-            populateFilterDropdown("Level", levels, allLevels, document.querySelector(".filter[name=level]"), true);
-            populateFilterDropdown("Monster Type", monsterTypes, allMonsterTypes, document.querySelector(".filter[name=monsterType]"));
+        function updateFilterOptions() {
+            populateFilterDropdown("Type", availableOptions("type"), document.querySelector(".filter[name=type]"));
+            populateFilterDropdown("Attribute", availableOptions("attribute"), document.querySelector(".filter[name=attribute]"));
+            populateFilterDropdown("Level", availableOptions("level"), document.querySelector(".filter[name=level]"), true);
+            populateFilterDropdown("Monster Type", availableOptions("race"), document.querySelector(".filter[name=monsterType]"));
         }
 
-        function populateFilterDropdown(category, types, allTypes, node, numeric) {
-            console.log(types, allTypes);
+        function availableOptions(category) {
+            let currentFilters = fetchFilters();
+            currentFilters[category] = "-";
+            let cards = filteredCards(currentFilters);
+            let result = new Set();
+            return new Set(cards.map(card => card[category]));
+        }
+
+        function populateFilterDropdown(category, types, node, numeric) {
             const value = node.value;
             while (node.options.length > 0) {
                 node.remove(0);
@@ -238,19 +233,14 @@
             option.value = "-";
             option.innerText = `- ${category} -`;
             node.appendChild(option);
-            let typesList = [...allTypes];
-            if (!value || value == "-") {
-                typesList = [...types];
-            }
+            let typesList = [...types].filter(type => !!type);
+            node.disabled = typesList.length == 0;
             if (numeric) {
                 typesList.sort((a, b) => a - b);
             } else {
                 typesList.sort();
             }
             typesList.forEach(type => {
-                if (!type) {
-                    return;
-                }
                 const option = document.createElement("option");
                 option.value = type;
                 option.innerText = type;
@@ -267,31 +257,33 @@
             filterCards(); // Calls filterCards() so sorting applies dynamically
         }
 
-        function filterCards() {
-            const nameSearchText = normalizeSearchTerm(document.getElementById("nameSearch").value);
-            const effectSearchText = document.getElementById("effectSearch").value.toLowerCase();
-
-            const currentType = document.querySelector(".filter[name=type]");
-            const currentAttribute = document.querySelector(".filter[name=attribute]");
-            const currentLevel = document.querySelector(".filter[name=level]");
-            const currentMonsterType = document.querySelector(".filter[name=monsterType]");
-
-            const filteredCards = cardData.filter(card => {
+        function filteredCards({ name, effect, type, attribute, level, race }) {
+            return cardData.filter(card => {
                 const normalizedCardName = normalizeSearchTerm(card.name);
-                const nameMatch = nameSearchText.split("*").every(term => normalizedCardName.includes(term.trim()));
-                const effectMatch = effectSearchText.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
-                const typeMatches = currentType.value !== "-" ? currentType.value == card.type : true;
-                const attributeMatches = currentAttribute.value !== "-" ? currentAttribute.value == card.attribute : true;
-                const levelMatches = currentLevel.value !== "-" ? currentLevel.value == card.level : true;
-                const raceMatches = currentMonsterType.value !== "-" ? currentMonsterType.value == card.race : true;
-                return nameMatch && effectMatch && typeMatches && attributeMatches && levelMatches && raceMatches;
+                const nameMatch = name.split("*").every(term => normalizedCardName.includes(term.trim()));
+                const effectMatch = effect.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
+                const typeMatch = type !== "-" ? type == card.type : true;
+                const attributeMatch = attribute !== "-" ? attribute == card.attribute : true;
+                const levelMatch = level !== "-" ? level == card.level : true;
+                const monsterTypeMatch = race !== "-" ? race == card.race : true;
+                return nameMatch && effectMatch && typeMatch && attributeMatch && levelMatch && monsterTypeMatch;
             });
+        }
 
-            // Apply sorting after filtering
-            // const sortOrder = document.getElementById("sortOrder").value;
-            // filteredCards.sort((a, b) => sortOrder === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+        function fetchFilters() {
+            return {
+                name: normalizeSearchTerm(document.getElementById("nameSearch").value),
+                effect: document.getElementById("effectSearch").value.toLowerCase(),
 
-            displayCards(filteredCards);
+                type: document.querySelector(".filter[name=type]").value || "-",
+                attribute: document.querySelector(".filter[name=attribute]").value || "-",
+                level: document.querySelector(".filter[name=level]").value || "-",
+                race: document.querySelector(".filter[name=monsterType]").value || "-",
+            };
+        }
+
+        function filterCards() {
+            displayCards(filteredCards(fetchFilters()));
         }
 
         function showCardInfo(card, imgSrc) {
