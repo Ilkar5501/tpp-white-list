@@ -26,6 +26,9 @@ function displayCards(cards) {
       .replace(/\s+/g, " ");
     const img = document.createElement("img");
     img.src = `card_images/small/${formattedName}.jpg`;
+    img.title = card.name;
+    img.alt = `Yu-Gi-Oh Card named ${card.name}. Click for details.`;
+
     img.classList.add("card");
     img.onclick = (event) => {
       if (lastCard) {
@@ -167,7 +170,11 @@ function filterCards() {
 }
 
 function showCardInfo(card, imgSrc) {
-  document.getElementById("infoImage").src = imgSrc;
+  const img = document.getElementById("infoImage");
+  img.src = imgSrc;
+  img.title = card.name;
+  img.alt = `Yu-Gi-Oh Card named ${card.name}. See below for details.`;
+
   document.getElementById("infoName").innerText = card.name;
   document.getElementById("infoType").innerText = card.type;
   document.getElementById("infoAttribute").innerText = card.attribute;
