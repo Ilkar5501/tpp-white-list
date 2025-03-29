@@ -21,6 +21,7 @@ async function loadCardData(urlParams) {
     const response = await fetch("card_data.json");
     cardData = await response.json();
     displayCards(cardData);
+    preloadFilters(urlParams);
     setTimeout(() => preloadFilters(urlParams), 50);
   } catch (error) {
     console.error("Error loading card data:", error);
