@@ -1,15 +1,15 @@
 {
-  "name": "TPP TCG Cards",
+  "name": "The Plunder Pirates: Format Whitelist",
   "short_name": "TPP TCG Cards",
   "icons": [
     {
-      "src": "/tpp-white-list/icon/web-app-manifest-192x192.png",
+      "src": "icon/web-app-manifest-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/tpp-white-list/icon/web-app-manifest-512x512.png",
+      "src": "icon/web-app-manifest-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
