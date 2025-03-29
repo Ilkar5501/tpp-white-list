@@ -47,7 +47,7 @@ function updateFilterOptions() {
   );
   populateFilterDropdown(
     "Level",
-    availableOptions("level"),
+    availableOptions("number_value"),
     document.querySelector(".filter[name=level]"),
     true
   );
@@ -55,6 +55,11 @@ function updateFilterOptions() {
     "Monster Type",
     availableOptions("race"),
     document.querySelector(".filter[name=monsterType]")
+  );
+  populateFilterDropdown(
+    "Archetype",
+    availableOptions("archetype"),
+    document.querySelector(".filter[name=archetype]")
   );
 }
 
@@ -115,15 +120,17 @@ function filteredCards(attrs) {
     let check = (attr) => checkAttr(attr, card, attrs);
     const typeMatch = check("type");
     const attributeMatch = check("attribute");
-    const levelMatch = check("level");
+    const levelMatch = check("number_value");
     const monsterTypeMatch = check("race");
+    const archetypeMatch = check("archetype");
     return (
       nameMatch &&
       effectMatch &&
       typeMatch &&
       attributeMatch &&
       levelMatch &&
-      monsterTypeMatch
+      monsterTypeMatch &&
+      archetypeMatch
     );
   });
 }
@@ -135,8 +142,9 @@ function fetchFilters() {
 
     type: document.querySelector(".filter[name=type]").value || "-",
     attribute: document.querySelector(".filter[name=attribute]").value || "-",
-    level: document.querySelector(".filter[name=level]").value || "-",
+    number_value: document.querySelector(".filter[name=level]").value || "-",
     race: document.querySelector(".filter[name=monsterType]").value || "-",
+    archetype: document.querySelector(".filter[name=archetype]").value || "-",
   };
 }
 
@@ -150,6 +158,7 @@ function showCardInfo(card, imgSrc) {
   document.getElementById("infoType").innerText = card.type;
   document.getElementById("infoAttribute").innerText = card.attribute;
   document.getElementById("infoLevel").innerText = card.level;
+  document.getElementById("infoLinkValue").innerText = card.linkval;
   document.getElementById("infoRace").innerText = card.race;
   document.getElementById("infoDesc").innerText = card.desc;
 
@@ -157,6 +166,9 @@ function showCardInfo(card, imgSrc) {
     ? "block"
     : "none";
   document.getElementById("infoLevelWrapper").style.display = card.level
+    ? "block"
+    : "none";
+  document.getElementById("infoLinkValueWrapper").style.display = card.linkval
     ? "block"
     : "none";
 
