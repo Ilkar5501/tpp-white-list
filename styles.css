@@ -63,14 +63,13 @@ h1 {
 }
 
 #cardContainer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .card {
-    width: 150px;
+    width: 100%;
     height: auto;
     cursor: pointer;
 }

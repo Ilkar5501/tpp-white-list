@@ -26,7 +26,14 @@ function displayCards(cards) {
     const img = document.createElement("img");
     img.src = `card_images/small/${formattedName}.jpg`;
     img.classList.add("card");
-    img.onclick = () => showCardInfo(card, `card_images/${formattedName}.jpg`);
+    img.onclick = (event) => {
+      setTimeout(
+        () =>
+          event.target.scrollIntoView({ behavior: "smooth", block: "center" }),
+        300
+      );
+      showCardInfo(card, `card_images/${formattedName}.jpg`);
+    };
     if (ix > 50) {
       img.loading = "lazy";
     }
@@ -67,7 +74,6 @@ function availableOptions(category) {
   let currentFilters = fetchFilters();
   currentFilters[category] = "-";
   let cards = filteredCards(currentFilters);
-  let result = new Set();
   return new Set(cards.map((card) => card[category]));
 }
 
