@@ -78,7 +78,7 @@ function updateFilterOptions() {
   );
   populateFilterDropdown(
     filters.type === "Monster Card"
-      ? "Race"
+      ? "Monster Type"
       : filters.type == "Spell Card"
       ? "Spell Type"
       : "Trap Type",
