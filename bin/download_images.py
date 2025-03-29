@@ -23,5 +23,6 @@ if __name__ == "__main__":
                 resp.raw.decode_content = True
                 shutil.copyfileobj(resp.raw, img)
             with Image.open(fname) as im:
+                im.save(fname, "JPEG", progressive=True)
                 im.thumbnail(THUMBNAIL)
-                im.save(f"card_images/small/{fname_base}.jpg", "JPEG")
+                im.save(f"card_images/small/{fname_base}.jpg", "JPEG", progressive=True)
