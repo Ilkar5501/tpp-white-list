@@ -21,7 +21,7 @@ async function loadCardData(urlParams) {
     const response = await fetch("card_data.json");
     cardData = await response.json();
     displayCards(cardData);
-    preloadFilters(urlParams);
+    setTimeout(() => preloadFilters(urlParams), 50);
   } catch (error) {
     console.error("Error loading card data:", error);
   }
@@ -225,7 +225,7 @@ function updateURL() {
 
   const current = new URL(window.location.href);
   current.search = new URLSearchParams(filteredObject).toString();
-  window.history.pushState("", "", current);
+  window.history.replaceState("", "", current);
 }
 
 function filterCards() {
