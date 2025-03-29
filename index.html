@@ -36,10 +36,10 @@
             <select name="attribute" class="filter" onChange="filterCards()"></select>
 
             <select name="archetype" class="filter" onChange="filterCards()"></select>
-            <select name="level" class="filter" onChange="filterCards()"></select>
+            <select name="number_value" class="filter" onChange="filterCards()"></select>
         </div>
         <div id="moreFilters">
-            <select name="subType" style="display:none" data-requires="type" class="filter"
+            <select name="race" style="display:none" data-requires="type" class="filter"
                 onChange="filterCards()"></select>
             <select name="category" style="display:none" data-requires="type" class="filter"
                 onChange="filterCards()"></select>
@@ -55,9 +55,10 @@
         <img id="infoImage" src="" class="card">
         <h2 id="infoName"></h2>
         <p><strong>Card Type:</strong> <span id="infoType"></span></p>
-        <p id="infoAttributeWrapper"><strong>Attribute:</strong> <span id="infoAttribute"></span></p>
-        <p id="infoLevelWrapper"><strong>Level:</strong> <span id="infoLevel"></span></p>
-        <p id="infoLinkValueWrapper"><strong>Link Value:</strong> <span id="infoLinkValue"></span></p>
+        <p><strong>Attribute:</strong> <span id="infoAttribute"></span></p>
+        <p><strong>ATK / DEF:</strong> <span id="infoAtkDef"></span></p>
+        <p><strong>Level:</strong> <span id="infoLevel"></span></p>
+        <p><strong>Link Value:</strong> <span id="infoLinkValue"></span></p>
         <p><strong>Monster Type / Sub-Type:</strong> <span id="infoRace"></span></p>
         <p><strong>Effect:</strong> <span id="infoDesc"></span></p>
         <div class="bottomPadding"></div>

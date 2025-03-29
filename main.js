@@ -1,14 +1,43 @@
 let cardData = [];
 let lastCard = null;
 
-async function loadCardData() {
+const FILTER_DATA = [
+  {
+    label: "Type",
+    attr: "type",
+    options: () => new Set(cardData.flatMap((card) => card.type)),
+  },
+  { label: "Attribute", attr: "attribute" },
+  { label: "Category", attr: "category" },
+  { label: "Level", attr: "number_value", numeric: true },
+  { label: (filters) => filters.type.replace("Card", "Type"), attr: "race" },
+  { label: "Archetype", attr: "archetype" },
+  { label: "Ability", attr: "abilities" },
+];
+
+async function loadCardData(urlParams) {
   try {
     const response = await fetch("card_data.json");
     cardData = await response.json();
     displayCards(cardData);
+    preloadFilters(urlParams);
   } catch (error) {
     console.error("Error loading card data:", error);
   }
+}
+
+function preloadFilters(urlParams) {
+  if (urlParams.has("name")) {
+    document.getElementById("nameSearch").value = urlParams.get("name");
+  }
+  if (urlParams.has("effect")) {
+    document.getElementById("effectSearch").value = urlParams.get("effect");
+  }
+  FILTER_DATA.forEach(({ attr }) => {
+    if (urlParams.has(attr)) {
+      filterNode(attr).value = urlParams.get(attr);
+    }
+  });
 }
 
 function normalizeSearchTerm(term) {
@@ -55,46 +84,14 @@ function focusCard(behavior) {
 function updateFilterOptions() {
   const filters = fetchFilters();
 
-  populateFilterDropdown(
-    "Type",
-    new Set(cardData.flatMap((card) => card.type)),
-    filterNode("type")
-  );
-  populateFilterDropdown(
-    "Attribute",
-    availableOptions("attribute"),
-    filterNode("attribute")
-  );
-  populateFilterDropdown(
-    "Category",
-    availableOptions("category"),
-    filterNode("category")
-  );
-  populateFilterDropdown(
-    "Level",
-    availableOptions("number_value"),
-    filterNode("level"),
-    true
-  );
-  populateFilterDropdown(
-    filters.type === "Monster Card"
-      ? "Monster Type"
-      : filters.type == "Spell Card"
-      ? "Spell Type"
-      : "Trap Type",
-    availableOptions("race"),
-    filterNode("subType")
-  );
-  populateFilterDropdown(
-    "Archetype",
-    availableOptions("archetype"),
-    filterNode("archetype")
-  );
-  populateFilterDropdown(
-    "Ability",
-    availableOptions("abilities"),
-    filterNode("abilities")
-  );
+  FILTER_DATA.forEach(({ label, attr, ...other }) => {
+    populateFilterDropdown(
+      label instanceof Function ? label(filters) : label,
+      other.options ? other.options() : availableOptions(attr),
+      filterNode(attr),
+      !!other.numeric
+    );
+  });
 }
 
 function availableOptions(category) {
@@ -179,15 +176,9 @@ function filteredCards(attrs) {
       .every((term) => card.desc.toLowerCase().includes(term.trim()));
 
     let attrsMatch = true;
-    [
-      "type",
-      "attribute",
-      "number_value",
-      "race",
-      "archetype",
-      "category",
-      "abilities",
-    ].forEach((attr) => (attrsMatch &&= checkAttr(attr, card, attrs)));
+    FILTER_DATA.forEach(
+      ({ attr }) => (attrsMatch &&= checkAttr(attr, card, attrs))
+    );
     return nameMatch && effectMatch && attrsMatch;
   });
 }
@@ -201,22 +192,33 @@ function filterValue(name) {
 }
 
 function fetchFilters() {
-  return {
+  const filters = {
     name: normalizeSearchTerm(document.getElementById("nameSearch").value),
     effect: document.getElementById("effectSearch").value.toLowerCase(),
-
-    type: filterValue("type"),
-    attribute: filterValue("attribute"),
-    number_value: filterValue("level"),
-    race: filterValue("subType"),
-    archetype: filterValue("archetype"),
-    category: filterValue("category"),
-    abilities: filterValue("abilities"),
   };
+
+  FILTER_DATA.forEach(({ attr }) => (filters[attr] = filterValue(attr)));
+  return filters;
 }
 
 function filterCards() {
+  const filters = fetchFilters();
+  var filteredObject = Object.keys(filters).reduce((obj, key) => {
+    if (filters[key] != "" && filters[key] != "-") obj[key] = filters[key];
+    return obj;
+  }, {});
+
+  const current = new URL(window.location.href);
+  current.search = new URLSearchParams(filteredObject).toString();
+  window.history.pushState("", "", current);
   displayCards(filteredCards(fetchFilters()));
+}
+
+function setValue(id, value, show) {
+  const node = document.getElementById(id);
+  node.innerText = value;
+  node.parentElement.style.display =
+    (show === undefined || show) && value ? "block" : "none";
 }
 
 function showCardInfo(card, imgSrc) {
@@ -225,23 +227,18 @@ function showCardInfo(card, imgSrc) {
   img.title = card.name;
   img.alt = `Yu-Gi-Oh Card named ${card.name}. See below for details.`;
 
-  document.getElementById("infoName").innerText = card.name;
-  document.getElementById("infoType").innerText = card.type;
-  document.getElementById("infoAttribute").innerText = card.attribute;
-  document.getElementById("infoLevel").innerText = card.level;
-  document.getElementById("infoLinkValue").innerText = card.linkval;
-  document.getElementById("infoRace").innerText = card.race;
-  document.getElementById("infoDesc").innerText = card.desc;
-
-  document.getElementById("infoAttributeWrapper").style.display = card.attribute
-    ? "block"
-    : "none";
-  document.getElementById("infoLevelWrapper").style.display = card.level
-    ? "block"
-    : "none";
-  document.getElementById("infoLinkValueWrapper").style.display = card.linkval
-    ? "block"
-    : "none";
+  setValue("infoName", card.name);
+  setValue("infoType", card.type);
+  setValue("infoAttribute", card.attribute);
+  setValue(
+    "infoAtkDef",
+    `${card.atk || "0"} / ${card.def || "0"}`,
+    !!card.atk || !!card.def
+  );
+  setValue("infoLevel", card.level);
+  setValue("infoLinkValue", card.linkval);
+  setValue("infoRace", card.race);
+  setValue("infoDesc", card.desc);
 
   document.getElementById("cardinfo").style.transform = "translateX(0)";
   document.getElementById("mainContent").style.marginRight = "calc(25% + 30px)";
@@ -259,4 +256,4 @@ function closeCardInfo() {
   }, 300);
 }
 
-loadCardData();
+loadCardData(new URLSearchParams(window.location.search));
