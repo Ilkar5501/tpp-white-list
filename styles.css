@@ -64,7 +64,7 @@ h1 {
 #cardContainer {
   display: grid;
   gap: 5px;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
 }
 
 .card {
@@ -134,4 +134,9 @@ h1 {
   padding: 5px 10px;
   cursor: pointer;
   font-size: 16px;
+}
+
+.bottomPadding {
+  display: block;
+  height: 25px;
 }
