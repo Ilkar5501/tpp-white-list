@@ -45,6 +45,8 @@ function preloadFilters(urlParams) {
       .querySelector(`[title="${urlParams.get("current_card")}"]`)
       .click();
   }
+
+  filterCards();
 }
 
 function normalizeSearchTerm(term) {
