@@ -1,5 +1,6 @@
 let cardData = [];
-let lastCard = null;
+let currentCardName = null;
+let currentCard = null;
 
 const FILTER_DATA = [
   {
@@ -38,6 +39,11 @@ function preloadFilters(urlParams) {
       filterNode(attr).value = urlParams.get(attr);
     }
   });
+  if (urlParams.has("current_card")) {
+    document
+      .querySelector(`[title="${urlParams.get("current_card")}"]`)
+      .click();
+  }
 }
 
 function normalizeSearchTerm(term) {
@@ -45,6 +51,7 @@ function normalizeSearchTerm(term) {
 }
 
 function displayCards(cards) {
+  updateURL();
   updateFilterOptions(cards);
   const container = document.getElementById("cardContainer");
   container.innerHTML = "";
@@ -60,11 +67,12 @@ function displayCards(cards) {
 
     img.classList.add("card");
     img.onclick = (event) => {
-      if (lastCard) {
-        lastCard.classList.remove("current");
+      if (currentCard) {
+        currentCard.classList.remove("current");
       }
-      lastCard = event.target;
-      lastCard.classList.add("current");
+      currentCardName = card.name;
+      currentCard = event.target;
+      currentCard.classList.add("current");
       focusCard();
       // Do it again after the animation
       setTimeout(focusCard, 300);
@@ -78,7 +86,10 @@ function displayCards(cards) {
 }
 
 function focusCard(behavior) {
-  lastCard.scrollIntoView({ behavior: behavior || "smooth", block: "center" });
+  currentCard.scrollIntoView({
+    behavior: behavior || "smooth",
+    block: "center",
+  });
 }
 
 function updateFilterOptions() {
@@ -201,16 +212,23 @@ function fetchFilters() {
   return filters;
 }
 
-function filterCards() {
+function updateURL() {
   const filters = fetchFilters();
   var filteredObject = Object.keys(filters).reduce((obj, key) => {
     if (filters[key] != "" && filters[key] != "-") obj[key] = filters[key];
     return obj;
   }, {});
 
+  if (currentCardName) {
+    filteredObject.current_card = currentCardName;
+  }
+
   const current = new URL(window.location.href);
   current.search = new URLSearchParams(filteredObject).toString();
   window.history.pushState("", "", current);
+}
+
+function filterCards() {
   displayCards(filteredCards(fetchFilters()));
 }
 
@@ -242,6 +260,8 @@ function showCardInfo(card, imgSrc) {
 
   document.getElementById("cardinfo").style.transform = "translateX(0)";
   document.getElementById("mainContent").style.marginRight = "calc(25% + 30px)";
+
+  updateURL();
 }
 
 function closeCardInfo() {
@@ -249,10 +269,12 @@ function closeCardInfo() {
   document.getElementById("mainContent").style.marginRight = "0";
   setTimeout(() => {
     focusCard("instant");
-    if (lastCard) {
-      lastCard.classList.remove("current");
+    if (currentCard) {
+      currentCard.classList.remove("current");
     }
-    lastCard = null;
+    currentCard = null;
+    currentCardName = null;
+    updateURL();
   }, 300);
 }
 
