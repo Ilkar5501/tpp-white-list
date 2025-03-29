@@ -257,15 +257,20 @@
             filterCards(); // Calls filterCards() so sorting applies dynamically
         }
 
-        function filteredCards({ name, effect, type, attribute, level, race }) {
+        function checkAttr(attr, card, attrs) {
+            return attrs[attr] != "-" ? attrs[attr] == card[attr] : true;
+        }
+
+        function filteredCards(attrs) {
             return cardData.filter(card => {
                 const normalizedCardName = normalizeSearchTerm(card.name);
-                const nameMatch = name.split("*").every(term => normalizedCardName.includes(term.trim()));
-                const effectMatch = effect.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
-                const typeMatch = type !== "-" ? type == card.type : true;
-                const attributeMatch = attribute !== "-" ? attribute == card.attribute : true;
-                const levelMatch = level !== "-" ? level == card.level : true;
-                const monsterTypeMatch = race !== "-" ? race == card.race : true;
+                const nameMatch = attrs.name.split("*").every(term => normalizedCardName.includes(term.trim()));
+                const effectMatch = attrs.effect.split("*").every(term => card.desc.toLowerCase().includes(term.trim()));
+                let check = (attr) => checkAttr(attr, card, attrs);
+                const typeMatch = check("type");
+                const attributeMatch = check("attribute");
+                const levelMatch = check("level");
+                const monsterTypeMatch = check("race");
                 return nameMatch && effectMatch && typeMatch && attributeMatch && levelMatch && monsterTypeMatch;
             });
         }
