@@ -1,4 +1,5 @@
 let cardData = [];
+let lastCard = null;
 
 async function loadCardData() {
   try {
@@ -27,11 +28,14 @@ function displayCards(cards) {
     img.src = `card_images/small/${formattedName}.jpg`;
     img.classList.add("card");
     img.onclick = (event) => {
-      setTimeout(
-        () =>
-          event.target.scrollIntoView({ behavior: "smooth", block: "center" }),
-        300
-      );
+      if (lastCard) {
+        lastCard.classList.remove("current");
+      }
+      lastCard = event.target;
+      lastCard.classList.add("current");
+      focusCard();
+      // Do it again after the animation
+      setTimeout(focusCard, 300);
       showCardInfo(card, `card_images/${formattedName}.jpg`);
     };
     if (ix > 50) {
@@ -39,6 +43,10 @@ function displayCards(cards) {
     }
     container.appendChild(img);
   });
+}
+
+function focusCard(behavior) {
+  lastCard.scrollIntoView({ behavior: behavior || "smooth", block: "center" });
 }
 
 function updateFilterOptions() {
@@ -185,6 +193,13 @@ function showCardInfo(card, imgSrc) {
 function closeCardInfo() {
   document.getElementById("cardinfo").style.transform = null;
   document.getElementById("mainContent").style.marginRight = "0";
+  setTimeout(() => {
+    focusCard("instant");
+    if (lastCard) {
+      lastCard.classList.remove("current");
+    }
+    lastCard = null;
+  }, 300);
 }
 
 loadCardData();
