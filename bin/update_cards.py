@@ -3,8 +3,12 @@
 import requests
 import json
 import csv
+import repair_card_data
 
 BASE_URL = "https://db.ygoprodeck.com/api/v7/cardinfo.php"
+
+CATEGORIES = ["Effect", "Ritual", "Fusion", "Synchro", "Xyz", "Link", "Pendulum"]
+ABILITIES = ["Flip", "Gemini", "Spirit", "Toon", "Tuner", "Union"]
 
 
 def chunker(seq, size):
@@ -29,12 +33,33 @@ if __name__ == "__main__":
         for card in data:
             card_info = {
                 "name": card["name"],
-                "type": card["type"],
+                "full_type": card["type"],
                 "race": card["race"],
                 "desc": card["desc"],
+                "frameType": card["frameType"],
                 "archetype": card.get("archetype", ""),
                 "image_url": card["card_images"][0]["image_url"],
             }
+
+            if card["type"] == "Spell Card":
+                card_info["type"] = "Spell Card"
+            elif card["type"] == "Trap Card":
+                card_info["type"] = "Trap Card"
+            else:
+                card_info["type"] = "Monster Card"
+                card_info["category"] = []
+                card_info["abilities"] = []
+                for summon_ty in CATEGORIES:
+                    if summon_ty in card["typeline"]:
+                        card_info["category"].append(summon_ty)
+                if len(card_info["category"]) == 0:
+                    card_info["category"].append("Normal")
+
+                for ability_ty in ABILITIES:
+                    if ability_ty in card["typeline"]:
+                        card_info["abilities"].append(ability_ty)
+                if len(card_info["abilities"]) == 0:
+                    del card_info["abilities"]
 
             if "attribute" in card and card["attribute"]:
                 card_info["attribute"] = card["attribute"]
@@ -50,7 +75,6 @@ if __name__ == "__main__":
                 card_info["linkval"] = card["linkval"]
             output.append(card_info)
 
-    output.sort(key=lambda card: card["name"])
-    output.sort(key=lambda card: card["type"])
+    repair_card_data.repair_card_data(output)
     with open("card_data.json", "w") as f:
         json.dump(output, f, indent=4)

@@ -53,31 +53,47 @@ function focusCard(behavior) {
 }
 
 function updateFilterOptions() {
+  const filters = fetchFilters();
+
   populateFilterDropdown(
     "Type",
-    availableOptions("type"),
-    document.querySelector(".filter[name=type]")
+    new Set(cardData.flatMap((card) => card.type)),
+    filterNode("type")
   );
   populateFilterDropdown(
     "Attribute",
     availableOptions("attribute"),
-    document.querySelector(".filter[name=attribute]")
+    filterNode("attribute")
+  );
+  populateFilterDropdown(
+    "Category",
+    availableOptions("category"),
+    filterNode("category")
   );
   populateFilterDropdown(
     "Level",
     availableOptions("number_value"),
-    document.querySelector(".filter[name=level]"),
+    filterNode("level"),
     true
   );
   populateFilterDropdown(
-    "Monster Type",
+    filters.type === "Monster Card"
+      ? "Race"
+      : filters.type == "Spell Card"
+      ? "Spell Type"
+      : "Trap Type",
     availableOptions("race"),
-    document.querySelector(".filter[name=monsterType]")
+    filterNode("subType")
   );
   populateFilterDropdown(
     "Archetype",
     availableOptions("archetype"),
-    document.querySelector(".filter[name=archetype]")
+    filterNode("archetype")
+  );
+  populateFilterDropdown(
+    "Ability",
+    availableOptions("abilities"),
+    filterNode("abilities")
   );
 }
 
@@ -85,7 +101,7 @@ function availableOptions(category) {
   let currentFilters = fetchFilters();
   currentFilters[category] = "-";
   let cards = filteredCards(currentFilters);
-  return new Set(cards.map((card) => card[category]));
+  return new Set(cards.flatMap((card) => card[category]));
 }
 
 function populateFilterDropdown(category, types, node, numeric) {
@@ -104,16 +120,39 @@ function populateFilterDropdown(category, types, node, numeric) {
   } else {
     typesList.sort();
   }
+  let validOption = false;
   typesList.forEach((type) => {
     const option = document.createElement("option");
     option.value = type;
     option.innerText = type;
     node.appendChild(option);
+    if (value == type) {
+      validOption = true;
+    }
   });
-  if (value) {
+  if (value && validOption) {
     node.value = value;
   } else {
-    node.value = "-";
+    if (value != "-") {
+      node.value = "-";
+      setTimeout(filterCards, 1);
+    }
+  }
+
+  if (node.dataset.requires) {
+    const currentFilters = fetchFilters();
+    if (
+      currentFilters[node.dataset.requires] &&
+      currentFilters[node.dataset.requires] != "-"
+    ) {
+      node.style.display = "block";
+    } else {
+      node.style.display = "none";
+      if (node.value != "-") {
+        node.value = "-";
+        setTimeout(filterCards, 1);
+      }
+    }
   }
 }
 
@@ -122,7 +161,11 @@ function sortCards() {
 }
 
 function checkAttr(attr, card, attrs) {
-  return attrs[attr] != "-" ? attrs[attr] == card[attr] : true;
+  if (card[attr] instanceof Array) {
+    return attrs[attr] != "-" ? card[attr].includes(attrs[attr]) : true;
+  } else {
+    return attrs[attr] != "-" ? attrs[attr] == card[attr] : true;
+  }
 }
 
 function filteredCards(attrs) {
@@ -134,22 +177,27 @@ function filteredCards(attrs) {
     const effectMatch = attrs.effect
       .split("*")
       .every((term) => card.desc.toLowerCase().includes(term.trim()));
-    let check = (attr) => checkAttr(attr, card, attrs);
-    const typeMatch = check("type");
-    const attributeMatch = check("attribute");
-    const levelMatch = check("number_value");
-    const monsterTypeMatch = check("race");
-    const archetypeMatch = check("archetype");
-    return (
-      nameMatch &&
-      effectMatch &&
-      typeMatch &&
-      attributeMatch &&
-      levelMatch &&
-      monsterTypeMatch &&
-      archetypeMatch
-    );
+
+    let attrsMatch = true;
+    [
+      "type",
+      "attribute",
+      "number_value",
+      "race",
+      "archetype",
+      "category",
+      "abilities",
+    ].forEach((attr) => (attrsMatch &&= checkAttr(attr, card, attrs)));
+    return nameMatch && effectMatch && attrsMatch;
   });
+}
+
+function filterNode(name) {
+  return document.querySelector(`.filter[name=${name}]`);
+}
+
+function filterValue(name) {
+  return filterNode(name).value || "-";
 }
 
 function fetchFilters() {
@@ -157,11 +205,13 @@ function fetchFilters() {
     name: normalizeSearchTerm(document.getElementById("nameSearch").value),
     effect: document.getElementById("effectSearch").value.toLowerCase(),
 
-    type: document.querySelector(".filter[name=type]").value || "-",
-    attribute: document.querySelector(".filter[name=attribute]").value || "-",
-    number_value: document.querySelector(".filter[name=level]").value || "-",
-    race: document.querySelector(".filter[name=monsterType]").value || "-",
-    archetype: document.querySelector(".filter[name=archetype]").value || "-",
+    type: filterValue("type"),
+    attribute: filterValue("attribute"),
+    number_value: filterValue("level"),
+    race: filterValue("subType"),
+    archetype: filterValue("archetype"),
+    category: filterValue("category"),
+    abilities: filterValue("abilities"),
   };
 }
 

@@ -34,9 +34,17 @@
         <div id="filterContainer">
             <select name="type" class="filter" onChange="filterCards()"></select>
             <select name="attribute" class="filter" onChange="filterCards()"></select>
-            <select name="level" class="filter" onChange="filterCards()"></select>
+
             <select name="archetype" class="filter" onChange="filterCards()"></select>
-            <select name="monsterType" class="filter" onChange="filterCards()"></select>
+            <select name="level" class="filter" onChange="filterCards()"></select>
+        </div>
+        <div id="moreFilters">
+            <select name="subType" style="display:none" data-requires="type" class="filter"
+                onChange="filterCards()"></select>
+            <select name="category" style="display:none" data-requires="type" class="filter"
+                onChange="filterCards()"></select>
+            <select name="abilities" style="display:none" data-requires="type" class="filter"
+                onChange="filterCards()"></select>
         </div>
         <div id="cardContainer">
         </div>

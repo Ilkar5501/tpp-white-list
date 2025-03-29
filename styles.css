@@ -42,7 +42,8 @@ h1 {
 }
 
 #searchContainer,
-#filterContainer {
+#filterContainer,
+#moreFilters {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
@@ -51,7 +52,8 @@ h1 {
   max-width: 100vw;
 }
 
-#filterContainer select {
+#filterContainer select,
+#moreFilters select {
   height: 35px;
 }
 
