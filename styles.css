@@ -76,6 +76,10 @@ h1 {
   border: 3px solid rgba(0, 0, 0, 0);
   margin: -3px;
   transition: border-color 0.5s ease-in;
+  aspect-ratio: 150/219;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("card_placeholder.png");
 }
 
 .card.current {
