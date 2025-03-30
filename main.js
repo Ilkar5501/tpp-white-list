@@ -21,7 +21,6 @@ async function loadCardData(urlParams) {
     const response = await fetch("card_data.json");
     cardData = await response.json();
     displayCards(cardData);
-    preloadFilters(urlParams);
     setTimeout(() => preloadFilters(urlParams), 50);
   } catch (error) {
     console.error("Error loading card data:", error);
@@ -69,6 +68,9 @@ function displayCards(cards) {
     img.alt = `Yu-Gi-Oh Card named ${card.name}. Click for details.`;
 
     img.classList.add("card");
+    if (currentCardName == card.name) {
+      img.classList.add("current");
+    }
     img.onclick = (event) => {
       if (currentCard) {
         currentCard.classList.remove("current");
