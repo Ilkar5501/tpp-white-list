@@ -1,176 +1,37 @@
-let cardData = [];
-let currentCardName = null;
-let currentCard = null;
+import { h, render, Component, Fragment, createRef } from "preact";
+import htm from "htm";
 
-const FILTER_DATA = [
-  {
+// Initialize htm with Preact
+const html = htm.bind(h);
+
+const FILTER_DATA_MAP = {
+  type: {
     label: "Type",
-    attr: "type",
-    options: () => new Set(cardData.flatMap((card) => card.type)),
+    options: (cards) => new Set(cards.flatMap((card) => card.type)),
   },
-  { label: "Attribute", attr: "attribute" },
-  { label: "Category", attr: "category" },
-  { label: "Level", attr: "number_value", numeric: true },
-  { label: (filters) => filters.type.replace("Card", "Type"), attr: "race" },
-  { label: "Archetype", attr: "archetype" },
-  { label: "Ability", attr: "abilities" },
-];
+  attribute: { label: "Attribute" },
+  category: { label: "Category" },
+  number_value: { label: "Level", numeric: true },
+  race: { label: (filters) => filters.type.replace("Card", "Type") },
+  archetype: { label: "Archetype" },
+  abilities: { label: "Ability" },
+};
 
 async function loadCardData(urlParams) {
   try {
     const response = await fetch("card_data.json");
-    cardData = await response.json();
-    displayCards(cardData);
-    setTimeout(() => preloadFilters(urlParams), 50);
+    const cards = await response.json();
+    render(
+      html`<${ThePlunderPiratesSite} urlParams=${urlParams} cards=${cards} />`,
+      document.body
+    );
   } catch (error) {
     console.error("Error loading card data:", error);
   }
 }
 
-function preloadFilters(urlParams) {
-  if (urlParams.has("name")) {
-    document.getElementById("nameSearch").value = urlParams.get("name");
-  }
-  if (urlParams.has("effect")) {
-    document.getElementById("effectSearch").value = urlParams.get("effect");
-  }
-  FILTER_DATA.forEach(({ attr }) => {
-    if (urlParams.has(attr)) {
-      filterNode(attr).value = urlParams.get(attr);
-    }
-  });
-  if (urlParams.has("current_card")) {
-    document
-      .querySelector(`[title="${urlParams.get("current_card")}"]`)
-      .click();
-  }
-
-  filterCards();
-}
-
 function normalizeSearchTerm(term) {
   return term.replace(/[?/'!,:&."]/g, "_").toLowerCase();
-}
-
-function displayCards(cards) {
-  updateURL();
-  updateFilterOptions(cards);
-  const container = document.getElementById("cardContainer");
-  container.innerHTML = "";
-
-  cards.forEach((card, ix) => {
-    const formattedName = card.name
-      .replace(/[?/'!,:&."]/g, "_")
-      .replace(/\s+/g, " ");
-    const img = document.createElement("img");
-    img.src = `card_images/small/${formattedName}.jpg`;
-    img.title = card.name;
-    img.alt = `Yu-Gi-Oh Card named ${card.name}. Click for details.`;
-
-    img.classList.add("card");
-    if (currentCardName == card.name) {
-      img.classList.add("current");
-    }
-    img.onclick = (event) => {
-      if (currentCard) {
-        currentCard.classList.remove("current");
-      }
-      currentCardName = card.name;
-      currentCard = event.target;
-      currentCard.classList.add("current");
-      focusCard();
-      // Do it again after the animation
-      setTimeout(focusCard, 300);
-      showCardInfo(card, `card_images/${formattedName}.jpg`);
-    };
-    if (ix > 50) {
-      img.loading = "lazy";
-    }
-    container.appendChild(img);
-  });
-}
-
-function focusCard(behavior) {
-  currentCard.scrollIntoView({
-    behavior: behavior || "smooth",
-    block: "center",
-  });
-}
-
-function updateFilterOptions() {
-  const filters = fetchFilters();
-
-  FILTER_DATA.forEach(({ label, attr, ...other }) => {
-    populateFilterDropdown(
-      label instanceof Function ? label(filters) : label,
-      other.options ? other.options() : availableOptions(attr),
-      filterNode(attr),
-      !!other.numeric
-    );
-  });
-}
-
-function availableOptions(category) {
-  let currentFilters = fetchFilters();
-  currentFilters[category] = "-";
-  let cards = filteredCards(currentFilters);
-  return new Set(cards.flatMap((card) => card[category]));
-}
-
-function populateFilterDropdown(category, types, node, numeric) {
-  const value = node.value;
-  while (node.options.length > 0) {
-    node.remove(0);
-  }
-  const option = document.createElement("option");
-  option.value = "-";
-  option.innerText = `- ${category} -`;
-  node.appendChild(option);
-  let typesList = [...types].filter((type) => !!type);
-  node.disabled = typesList.length == 0;
-  if (numeric) {
-    typesList.sort((a, b) => a - b);
-  } else {
-    typesList.sort();
-  }
-  let validOption = false;
-  typesList.forEach((type) => {
-    const option = document.createElement("option");
-    option.value = type;
-    option.innerText = type;
-    node.appendChild(option);
-    if (value == type) {
-      validOption = true;
-    }
-  });
-  if (value && validOption) {
-    node.value = value;
-  } else {
-    if (value != "-") {
-      node.value = "-";
-      setTimeout(filterCards, 1);
-    }
-  }
-
-  if (node.dataset.requires) {
-    const currentFilters = fetchFilters();
-    if (
-      currentFilters[node.dataset.requires] &&
-      currentFilters[node.dataset.requires] != "-"
-    ) {
-      node.style.display = "block";
-    } else {
-      node.style.display = "none";
-      if (node.value != "-") {
-        node.value = "-";
-        setTimeout(filterCards, 1);
-      }
-    }
-  }
-}
-
-function sortCards() {
-  filterCards(); // Calls filterCards() so sorting applies dynamically
 }
 
 function checkAttr(attr, card, attrs) {
@@ -181,106 +42,258 @@ function checkAttr(attr, card, attrs) {
   }
 }
 
-function filteredCards(attrs) {
-  return cardData.filter((card) => {
-    const normalizedCardName = normalizeSearchTerm(card.name);
-    const nameMatch = attrs.name
-      .split("*")
-      .every((term) => normalizedCardName.includes(term.trim()));
-    const effectMatch = attrs.effect
-      .split("*")
-      .every((term) => card.desc.toLowerCase().includes(term.trim()));
+loadCardData(new URLSearchParams(window.location.search));
 
-    let attrsMatch = true;
-    FILTER_DATA.forEach(
-      ({ attr }) => (attrsMatch &&= checkAttr(attr, card, attrs))
-    );
-    return nameMatch && effectMatch && attrsMatch;
-  });
+function SearchBar({ name, value, onInput }) {
+  return html`<input
+    type="text"
+    value=${value}
+    onInput="${onInput}"
+    class="searchBar"
+    placeholder="Search by ${name}..."
+  />`;
 }
 
-function filterNode(name) {
-  return document.querySelector(`.filter[name=${name}]`);
+function FilterSelect({ value, onChange, title, options, disabled }) {
+  return html`<select
+    value=${value}
+    class="filter"
+    onChange=${onChange}
+    disabled=${disabled}
+  >
+    <option value="-">- ${title} -</option>
+    ${options.map((option) => html`<option value=${option}>${option}</option>`)}
+  </select>`;
 }
 
-function filterValue(name) {
-  return filterNode(name).value || "-";
+function showVal(label, value, show) {
+  if ((show === undefined || show) && value) {
+    return html`<p><strong>${label}: </strong><span>${value}</span></p>`;
+  }
 }
 
-function fetchFilters() {
-  const filters = {
-    name: normalizeSearchTerm(document.getElementById("nameSearch").value),
-    effect: document.getElementById("effectSearch").value.toLowerCase(),
-  };
-
-  FILTER_DATA.forEach(({ attr }) => (filters[attr] = filterValue(attr)));
-  return filters;
+function CardInfo({ card, onClose }) {
+  const formattedName = card.name
+    .replace(/[?/'!,:&."]/g, "_")
+    .replace(/\s+/g, " ");
+  return html`<${Fragment}>
+    <button class="close-btn" onclick=${onClose}>X</button>
+    <img id="infoImage" src="card_images/${formattedName}.jpg" class="card" />
+    <h2 id="infoName">${card.name}</h2>
+    ${showVal("Card Type", card.full_type)}
+    ${showVal("Attribute", card.attribute)}
+    ${showVal(
+      "ATK / DEF",
+      `${card.atk || "0"} / ${card.def || "0"}`,
+      !!card.atk || !!card.def
+    )}
+    ${showVal("Level", card.level)} ${showVal("Link Value", card.linkval)}
+    ${showVal(
+      card.type == "Monster Card" ? "Monster Type" : "Sub-Type",
+      card.race
+    )}
+    ${showVal("Effect", card.desc)}
+    <div class="bottomPadding"></div>
+  </${Fragment}>`;
 }
 
-function updateURL() {
-  const filters = fetchFilters();
-  var filteredObject = Object.keys(filters).reduce((obj, key) => {
-    if (filters[key] != "" && filters[key] != "-") obj[key] = filters[key];
-    return obj;
-  }, {});
+class ThePlunderPiratesSite extends Component {
+  currentCard = createRef();
 
-  if (currentCardName) {
-    filteredObject.current_card = currentCardName;
+  constructor(props) {
+    super(props);
+    this.state = {
+      name: "",
+      effect: "",
+
+      type: "-",
+      attribute: "-",
+      archetype: "-",
+      number_value: "-",
+
+      race: "-",
+      category: "-",
+      abilities: "-",
+
+      current_card: null,
+    };
+    props.urlParams.forEach((v, k) => {
+      if (k === "current_card") {
+        props.cards.forEach((card) => {
+          if (card.name == v) {
+            this.state.current_card = card;
+            setTimeout(() => this.focusCard(), 50);
+          }
+        });
+      } else {
+        this.state[k] = v;
+      }
+    });
   }
 
-  const current = new URL(window.location.href);
-  current.search = new URLSearchParams(filteredObject).toString();
-  window.history.replaceState("", "", current);
-}
+  filteredCards(attrs) {
+    return this.props.cards.filter((card) => {
+      const normalizedCardName = normalizeSearchTerm(card.name);
+      const nameMatch = attrs.name
+        .split("*")
+        .every((term) => normalizedCardName.includes(term.trim()));
+      const effectMatch = attrs.effect
+        .split("*")
+        .every((term) => card.desc.toLowerCase().includes(term.trim()));
 
-function filterCards() {
-  displayCards(filteredCards(fetchFilters()));
-}
+      let attrsMatch = true;
+      Object.keys(FILTER_DATA_MAP).forEach(
+        (attr) => (attrsMatch &&= checkAttr(attr, card, attrs))
+      );
+      return nameMatch && effectMatch && attrsMatch;
+    });
+  }
 
-function setValue(id, value, show) {
-  const node = document.getElementById(id);
-  node.innerText = value;
-  node.parentElement.style.display =
-    (show === undefined || show) && value ? "block" : "none";
-}
-
-function showCardInfo(card, imgSrc) {
-  const img = document.getElementById("infoImage");
-  img.src = imgSrc;
-  img.title = card.name;
-  img.alt = `Yu-Gi-Oh Card named ${card.name}. See below for details.`;
-
-  setValue("infoName", card.name);
-  setValue("infoType", card.type);
-  setValue("infoAttribute", card.attribute);
-  setValue(
-    "infoAtkDef",
-    `${card.atk || "0"} / ${card.def || "0"}`,
-    !!card.atk || !!card.def
-  );
-  setValue("infoLevel", card.level);
-  setValue("infoLinkValue", card.linkval);
-  setValue("infoRace", card.race);
-  setValue("infoDesc", card.desc);
-
-  document.getElementById("cardinfo").style.transform = "translateX(0)";
-  document.getElementById("mainContent").style.marginRight = "calc(25% + 30px)";
-
-  updateURL();
-}
-
-function closeCardInfo() {
-  document.getElementById("cardinfo").style.transform = null;
-  document.getElementById("mainContent").style.marginRight = "0";
-  setTimeout(() => {
-    focusCard("instant");
-    if (currentCard) {
-      currentCard.classList.remove("current");
+  updateValue = (key, extraOnChange) => (e) => {
+    const v = e.currentTarget.value;
+    this.setState({ [key]: v });
+    if (extraOnChange) {
+      extraOnChange(v);
     }
-    currentCard = null;
-    currentCardName = null;
-    updateURL();
-  }, 300);
-}
+  };
 
-loadCardData(new URLSearchParams(window.location.search));
+  availableOptions(category) {
+    let currentFilters = structuredClone(this.state);
+    currentFilters[category] = "-";
+    let cards = this.filteredCards(currentFilters);
+    return new Set(cards.flatMap((card) => card[category]));
+  }
+
+  fieldFilter(type, extraOnChange) {
+    let { label, numeric, ...other } = FILTER_DATA_MAP[type];
+    label = label instanceof Function ? label(this.state) : label;
+    const options = other.options
+      ? other.options(this.props.cards)
+      : this.availableOptions(type);
+    let typesList = [...options].filter((type) => !!type);
+    if (numeric) {
+      typesList.sort((a, b) => a - b);
+    } else {
+      typesList.sort();
+    }
+
+    if (this.state[type] != "-" && !typesList.includes(this.state[type])) {
+      this.setState({ [type]: "-" });
+    }
+
+    return html`<${FilterSelect}
+      value=${typesList.includes(this.state[type]) ? this.state[type] : "-"}
+      disabled=${typesList.length == 0}
+      title="${label}"
+      options=${typesList}
+      onChange=${this.updateValue(type, extraOnChange)}
+    />`;
+  }
+
+  componentWillUpdate(_nextProps, nextState) {
+    var filteredObject = Object.keys(nextState).reduce((obj, key) => {
+      if (nextState[key] && nextState[key] != "" && nextState[key] != "-")
+        obj[key] = nextState[key];
+      return obj;
+    }, {});
+    if (filteredObject.current_card) {
+      filteredObject.current_card = filteredObject.current_card.name;
+    }
+    const current = new URL(window.location.href);
+    current.search = new URLSearchParams(filteredObject).toString();
+    window.history.replaceState("", "", current);
+  }
+
+  focusCard() {
+    if (this.currentCard.current) {
+      this.currentCard.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }
+
+  render() {
+    return html`<${Fragment}>
+    <div class="headerBar">
+        <img id="bannerImage" src="Banner.png" />
+        <h1>The Plunder Pirates</h1>
+    </div>
+    <div
+      id="mainContent"
+      style=${this.state.current_card ? "margin-right: calc(25% + 30px)" : ""}
+    >
+      <div id="searchContainer">
+        <${SearchBar} name="name" value=${
+      this.state.name
+    } onInput="${this.updateValue("name")}" />
+        <${SearchBar} name="effect" value=${
+      this.state.effect
+    } onInput="${this.updateValue("effect")}" />
+      </div>
+      <div id="filterContainer">
+        ${this.fieldFilter("type", (v) => {
+          if (v == "-") {
+            this.setState({
+              race: "-",
+              category: "-",
+              abilities: "-",
+            });
+          }
+        })}
+        ${this.fieldFilter("attribute")} ${this.fieldFilter("archetype")}
+        ${this.fieldFilter("number_value")}
+      </div>
+      ${
+        this.state.type != "-"
+          ? html` <div id="moreFilters">
+              ${this.fieldFilter("race")} ${this.fieldFilter("category")}
+              ${this.fieldFilter("abilities")}
+            </div>`
+          : null
+      }
+      <div id="cardContainer">
+        ${this.filteredCards(this.state).map((card) => {
+          const formattedName = card.name
+            .replace(/[?/'!,:&."]/g, "_")
+            .replace(/\s+/g, " ");
+          const focusCard = () => {
+            this.setState({
+              current_card: card,
+            });
+            for (let i = 10; i <= 300; i += 10) {
+              setTimeout(() => this.focusCard(), i);
+            }
+          };
+          const isCurrent =
+            this.state.current_card &&
+            this.state.current_card.name == card.name;
+          return html`<img
+            key=${card.name}
+            ref=${isCurrent ? this.currentCard : null}
+            class="card ${isCurrent ? "current" : ""}"
+            src="card_images/small/${formattedName}.jpg"
+            title=${card.name}
+            alt=${card.name}
+            onClick=${focusCard}
+          />`;
+        })}
+      </div>
+      <div
+        id="cardinfo"
+        style=${this.state.current_card ? "transform: translateX(0)" : ""}
+      >
+        ${
+          this.state.current_card
+            ? html`<${CardInfo}
+                card=${this.state.current_card}
+                onClose=${() => this.setState({ current_card: null })}
+              />`
+            : null
+        }
+      </div>
+      <div class="bottomPadding"></div>
+    </div>
+    </${Fragment}>`;
+  }
+}
