@@ -13,22 +13,57 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
 
-    <script type="importmap">
-        {
-            "imports": {
-                "preact": "https://esm.sh/preact@10.7.2",
-                "preact/": "https://esm.sh/preact@10.7.2/",
-                "htm": "https://esm.sh/htm@3.1.1"
-            }
-        }
-    </script>
-    <script src="main.js" type="module" defer></script>
+    <script src="main.js" defer></script>
     <link href="styles.css" rel="stylesheet">
 
     <title>TPP TCG Cards</title>
 </head>
 
 <body>
+    <div class="headerBar">
+        <img id="bannerImage" src="Banner.png" />
+        <h1>The Plunder Pirates</h1>
+    </div>
+    <div id="mainContent">
+        <div id="searchContainer">
+            <input type="text" id="nameSearch" class="searchBar" placeholder="Search by name..."
+                onkeyup="filterCards()">
+            <input type="text" id="effectSearch" class="searchBar" placeholder="Search by effect..."
+                onkeyup="filterCards()">
+        </div>
+        <div id="filterContainer">
+            <select name="type" class="filter" onChange="filterCards()"></select>
+            <select name="attribute" class="filter" onChange="filterCards()"></select>
+
+            <select name="archetype" class="filter" onChange="filterCards()"></select>
+            <select name="number_value" class="filter" onChange="filterCards()"></select>
+        </div>
+        <div id="moreFilters">
+            <select name="race" style="display:none" data-requires="type" class="filter"
+                onChange="filterCards()"></select>
+            <select name="category" style="display:none" data-requires="type" class="filter"
+                onChange="filterCards()"></select>
+            <select name="abilities" style="display:none" data-requires="type" class="filter"
+                onChange="filterCards()"></select>
+        </div>
+        <div id="cardContainer">
+        </div>
+    </div>
+
+    <div id="cardinfo">
+        <button class="close-btn" onclick="closeCardInfo()">X</button>
+        <img id="infoImage" src="" class="card">
+        <h2 id="infoName"></h2>
+        <p><strong>Card Type:</strong> <span id="infoType"></span></p>
+        <p><strong>Attribute:</strong> <span id="infoAttribute"></span></p>
+        <p><strong>ATK / DEF:</strong> <span id="infoAtkDef"></span></p>
+        <p><strong>Level:</strong> <span id="infoLevel"></span></p>
+        <p><strong>Link Value:</strong> <span id="infoLinkValue"></span></p>
+        <p><strong>Monster Type / Sub-Type:</strong> <span id="infoRace"></span></p>
+        <p><strong>Effect:</strong> <span id="infoDesc"></span></p>
+        <div class="bottomPadding"></div>
+    </div>
+    <div class="bottomPadding"></div>
 </body>
 
 </html>
