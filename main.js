@@ -73,12 +73,9 @@ function showVal(label, value, show) {
 }
 
 function CardInfo({ card, onClose }) {
-  const formattedName = card.name
-    .replace(/[?/'!,:&."]/g, "_")
-    .replace(/\s+/g, " ");
   return html`<${Fragment}>
     <button class="close-btn" onclick=${onClose}>X</button>
-    <img id="infoImage" src="card_images/${formattedName}.jpg" class="card" />
+    <${CardImg} card=${card} />
     <h2 id="infoName">${card.name}</h2>
     ${showVal("Card Type", card.full_type)}
     ${showVal("Attribute", card.attribute)}
@@ -95,6 +92,21 @@ function CardInfo({ card, onClose }) {
     ${showVal("Effect", card.desc)}
     <div class="bottomPadding"></div>
   </${Fragment}>`;
+}
+
+function CardImg({ card, imgRef, isSmall, onClick, highlight }) {
+  const formattedName = card.name
+    .replace(/[?/'!,:&."]/g, "_")
+    .replace(/\s+/g, " ");
+  return html`<img
+    key=${card.name}
+    ref=${imgRef}
+    class="card ${highlight ? "current" : ""}"
+    src="card_images/${isSmall ? "small/" : ""}${formattedName}.jpg"
+    title=${card.name}
+    alt=${card.name}
+    onClick=${onClick}
+  />`;
 }
 
 class ThePlunderPiratesSite extends Component {
@@ -116,6 +128,7 @@ class ThePlunderPiratesSite extends Component {
       abilities: "-",
 
       current_card: null,
+      zoom_in: false,
     };
     props.urlParams.forEach((v, k) => {
       if (k === "current_card") {
@@ -192,12 +205,17 @@ class ThePlunderPiratesSite extends Component {
 
   componentWillUpdate(_nextProps, nextState) {
     var filteredObject = Object.keys(nextState).reduce((obj, key) => {
-      if (nextState[key] && nextState[key] != "" && nextState[key] != "-")
+      if (
+        nextState[key] &&
+        nextState[key] instanceof String &&
+        nextState[key] != "" &&
+        nextState[key] != "-"
+      )
         obj[key] = nextState[key];
       return obj;
     }, {});
-    if (filteredObject.current_card) {
-      filteredObject.current_card = filteredObject.current_card.name;
+    if (nextState.current_card) {
+      filteredObject.current_card = nextState.current_card.name;
     }
     const current = new URL(window.location.href);
     current.search = new URLSearchParams(filteredObject).toString();
@@ -254,9 +272,6 @@ class ThePlunderPiratesSite extends Component {
       }
       <div id="cardContainer">
         ${this.filteredCards(this.state).map((card) => {
-          const formattedName = card.name
-            .replace(/[?/'!,:&."]/g, "_")
-            .replace(/\s+/g, " ");
           const focusCard = () => {
             this.setState({
               current_card: card,
@@ -268,14 +283,12 @@ class ThePlunderPiratesSite extends Component {
           const isCurrent =
             this.state.current_card &&
             this.state.current_card.name == card.name;
-          return html`<img
-            key=${card.name}
-            ref=${isCurrent ? this.currentCard : null}
-            class="card ${isCurrent ? "current" : ""}"
-            src="card_images/small/${formattedName}.jpg"
-            title=${card.name}
-            alt=${card.name}
+          return html`<${CardImg}
+            imgRef=${isCurrent ? this.currentCard : null}
+            highlight=${isCurrent}
+            card=${card}
             onClick=${focusCard}
+            isSmall=${true}
           />`;
         })}
       </div>
