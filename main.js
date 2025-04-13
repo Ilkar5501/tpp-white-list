@@ -207,7 +207,8 @@ class ThePlunderPiratesSite extends Component {
     var filteredObject = Object.keys(nextState).reduce((obj, key) => {
       if (
         nextState[key] &&
-        nextState[key] instanceof String &&
+        (typeof nextState[key] === "string" ||
+          nextState[key] instanceof String) &&
         nextState[key] != "" &&
         nextState[key] != "-"
       )
